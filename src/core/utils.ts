@@ -25,6 +25,7 @@ export function stringifyImport(info: ImportInfo | string) {
     return `import ${info.default} from '${info.from}'`
 }
 
+// 合并默认与传入的配置选项
 export function resolveOptions(options: Options = {}): Required<Options> {
   return {
     rootDir: options.rootDir || process.cwd(),

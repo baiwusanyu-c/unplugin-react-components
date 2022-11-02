@@ -1,8 +1,8 @@
 import react from '@vitejs/plugin-react'
 import Inspect from 'vite-plugin-inspect'
 import { defineConfig } from 'vite'
-import Components from 'unplugin-react-components/vite'
-import { AntdResolver, MuiResolver } from 'unplugin-react-components'
+import Components from '../src/vite'
+import { AntdResolver, MuiResolver } from '../src'
 
 // https://vitejs.dev/config/
 export default defineConfig({

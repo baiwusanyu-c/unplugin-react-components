@@ -10,14 +10,18 @@ import { slash } from './utils'
 export function searchGlob(options: SearchGlobOptions): Components {
   const { rootPath } = options
 
+  // 获得文件列表
   const files = fg.sync(['**/**.tsx', '**/**.jsx'], {
     ignore: ['node_modules'],
     cwd: rootPath,
   })
   const components: Components = new Set()
 
+  // 遍历文件列表
   for (const file of files) {
+    // 读取文件，获得源码字符串
     const code = fs.readFileSync(file, { encoding: 'utf-8' })
+    // 调用 babel解析，转化为 ESTree-compliant AST
     const program = parse(code, {
       sourceType: 'module',
       plugins: [
@@ -25,7 +29,8 @@ export function searchGlob(options: SearchGlobOptions): Components {
         'jsx',
       ],
     }) as BaseNode
-
+    // 使用 estree-walker 遍历 ast, 根据ast节点的类型封装数据对象
+    // 最终只保留那些导入、导出的数据信息对象
     walk(program, {
       enter(nodes) {
         const node = nodes as unknown as Node
@@ -118,5 +123,6 @@ export function searchGlob(options: SearchGlobOptions): Components {
     })
   }
 
+  // 过滤item.type !== 'Declaration' ，去重后返回
   return new Set(Array.from(components).filter(item => item.type !== 'Declaration'))
 }

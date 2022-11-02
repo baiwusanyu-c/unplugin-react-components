@@ -14,13 +14,17 @@ export * from './core/searchGlob'
 export * from './core/transformer'
 
 export default createUnplugin<Options>((options = {}) => {
+  // 初始化与默认配置合并
   options = resolveOptions(options)
-
+  // 创建过滤器，包括哪些后缀，不包括哪些文件夹
   const filter = createFilter(
     options.include || [/\.[j|t]sx$/],
     options.exclude || [/[\\/]node_modules[\\/]/, /[\\/]\.git[\\/]/],
   )
+  // 从根目录搜索获得组件模块对象（这里是为了得到项目内组件的 导出导入信息，只是项目内，没有到组件库依赖）
   const searchGlobResult = searchGlob({ rootPath: (options.dts as any)?.rootPath || options.rootDir! })
+
+  // 设置 dts 的option
   const dtsOptions = {
     components: searchGlobResult,
     filename: (options.dts as GenerateDtsOptions)?.filename || 'components',
@@ -29,6 +33,7 @@ export default createUnplugin<Options>((options = {}) => {
     resolvers: options.resolvers,
   } as GenerateDtsOptions
 
+  // 生成 dts -> component.d.ts
   if (options.dts === true)
     generateDts({ ...dtsOptions })
   else if (typeof options.dts === 'object')
@@ -36,12 +41,14 @@ export default createUnplugin<Options>((options = {}) => {
 
   return {
     name: 'unplugin-react-components',
+    // 过滤模块
     transformInclude(id) {
       return filter(id)
     },
+    // 转换编译结果,在 vite 编译阶段 转换组件引用代码
     async transform(code, id) {
       const context: TransformOptions = {
-        code: new MagicString(code),
+        code: new MagicString(code), // 轻量的处理源码的库，能够生成一个对象，里面有一些方便的方法处理字符串
         components: searchGlobResult,
         rootDir: options.rootDir!,
         resolvers: options.resolvers!,
